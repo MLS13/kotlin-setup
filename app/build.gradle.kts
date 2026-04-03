@@ -54,3 +54,17 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+tasks.register("printGitHubSecret") {
+    group = "custom"
+    description = "Task para exibir uma secret vinda do GitHub Actions (via variável de ambiente)."
+    doLast {
+        // No GitHub Actions, essa variável deve ser mapeada no arquivo YAML do workflow:
+        // env:
+        //   MY_GITHUB_SECRET: \${{ secrets.MY_GITHUB_SECRET }}
+        val secret = System.getenv("MY_GITHUB_SECRET") ?: "A secret 'MY_GITHUB_SECRET' não foi encontrada."
+        println("-----------------------------------------")
+        println("Valor da Secret: $secret")
+        println("-----------------------------------------")
+    }
+}
