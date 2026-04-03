@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -57,14 +59,27 @@ dependencies {
 
 tasks.register("printGitHubSecret") {
     group = "custom"
-    description = "Task para exibir uma secret vinda do GitHub Actions (via variável de ambiente)."
+    description = "Task para exibir secrets vindas do GitHub Actions."
     doLast {
-        // No GitHub Actions, essa variável deve ser mapeada no arquivo YAML do workflow:
-        // env:
-        //   MY_GITHUB_SECRET: \${{ secrets.MY_GITHUB_SECRET }}
+        // Secret 1: Texto simples
         val secret = System.getenv("MY_GITHUB_SECRET") ?: "A secret 'MY_GITHUB_SECRET' não foi encontrada."
         println("-----------------------------------------")
-        println("Valor da Secret: $secret")
+        println("Valor da Secret (Simples): $secret")
+        
+        // Secret 2: Base64 (.txt)
+        val secretBase64 = System.getenv("MY_GITHUB_SECRET_BASE_64")
+        if (secretBase64 != null) {
+            try {
+                val decodedBytes = Base64.getDecoder().decode(secretBase64)
+                val decodedString = String(decodedBytes, Charsets.UTF_8)
+                println("Conteúdo do arquivo Base64 decodificado:")
+                println(decodedString)
+            } catch (e: Exception) {
+                println("Erro ao decodificar a secret Base64: ${e.message}")
+            }
+        } else {
+            println("A secret 'MY_GITHUB_SECRET_BASE_64' não foi encontrada.")
+        }
         println("-----------------------------------------")
     }
 }
