@@ -1,4 +1,5 @@
 import java.util.Base64
+import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -59,23 +60,39 @@ dependencies {
 
 tasks.register("printGitHubSecret") {
     group = "custom"
-    description = "Task para exibir secrets vindas do GitHub Actions."
+    description = "Task para converter Base64 em arquivo e ler usando file()."
     doLast {
         // Secret 1: Texto simples
         val secret = System.getenv("MY_GITHUB_SECRET") ?: "A secret 'MY_GITHUB_SECRET' não foi encontrada."
         println("-----------------------------------------")
         println("Valor da Secret (Simples): $secret")
         
-        // Secret 2: Base64 (.txt)
+        // Secret 2: Base64 -> Arquivo -> Leitura
         val secretBase64 = System.getenv("MY_GITHUB_SECRET_BASE_64")
         if (secretBase64 != null) {
             try {
+                // 1. Decodifica o Base64
                 val decodedBytes = Base64.getDecoder().decode(secretBase64)
-                val decodedString = String(decodedBytes, Charsets.UTF_8)
-                println("Conteúdo do arquivo Base64 decodificado:")
-                println(decodedString)
+                
+                // 2. Cria um arquivo temporário
+                val tempFile = File(project.projectDir, "temp_secret.txt")
+                tempFile.writeBytes(decodedBytes)
+                println("Arquivo temporário criado em: ${tempFile.absolutePath}")
+
+                // 3. Lê o arquivo usando a sintaxe file() do Gradle (que retorna um objeto File)
+                // Nota: Em Kotlin DSL, project.file() ou apenas file() resolve o caminho relativo ao projeto
+                val fileToRead = file("temp_secret.txt")
+                
+                if (fileToRead.exists()) {
+                    println("Conteúdo lido do arquivo via file():")
+                    println(fileToRead.readText(Charsets.UTF_8))
+                }
+
+                // Opcional: Remover o arquivo após o teste (comentado para você poder validar se quiser)
+                // tempFile.delete()
+                
             } catch (e: Exception) {
-                println("Erro ao decodificar a secret Base64: ${e.message}")
+                println("Erro no processo de arquivo: ${e.message}")
             }
         } else {
             println("A secret 'MY_GITHUB_SECRET_BASE_64' não foi encontrada.")
